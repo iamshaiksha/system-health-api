@@ -9,8 +9,6 @@ import logging
 import time
 from collections import deque
 from contextlib import asynccontextmanager
-from typing import Any
-
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -19,7 +17,7 @@ from starlette.responses import Response
 
 from app.models import SystemInput, SystemHealthReport, ComponentHealth, HealthStatus
 from app.visualizer import generate_dag_image
-from app.observability import setup_logging, get_tracer
+from app.observability import setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -177,7 +175,6 @@ async def health_check(payload: SystemInput):
 
         results = await evaluate_all(order, node_map)
 
-    result_map = {r.id: r for r in results}
     healthy_count = sum(1 for r in results if r.status == HealthStatus.HEALTHY)
     total = len(results)
     overall = HealthStatus.HEALTHY if healthy_count == total else HealthStatus.UNHEALTHY
