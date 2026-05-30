@@ -144,13 +144,27 @@ jobs:
         with:
           terraform_version: 1.9.5
 
+      - name: Check AWS credentials
+        id: check-creds
+        run: |
+          if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+            echo "has_creds=false" >> $GITHUB_OUTPUT
+            echo "::notice::AWS credentials not configured — skipping Terraform Apply"
+          else
+            echo "has_creds=true" >> $GITHUB_OUTPUT
+          fi
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
       - name: Terraform Init
+        if: steps.check-creds.outputs.has_creds == 'true'
         run: terraform init
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Terraform Apply
+        if: steps.check-creds.outputs.has_creds == 'true'
         run: terraform apply -var-file="environments/prod.tfvars" -auto-approve
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
